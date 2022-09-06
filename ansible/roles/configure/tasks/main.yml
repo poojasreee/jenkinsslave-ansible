@@ -1,0 +1,10 @@
+---
+# tasks file for /etc/ansible/roles/configure
+- name: check ping
+  win_ping:
+
+- name: Install java
+  import_tasks: java.yml
+
+- name: Install jenkins slave
+  import_tasks: jenkins.yml

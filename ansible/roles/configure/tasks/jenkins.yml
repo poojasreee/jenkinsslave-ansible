@@ -1,0 +1,52 @@
+---
+
+- name: Check if jenkins is already installed
+  win_stat:
+    path: '{{ jenkins_path }}/{{ jenkins_exe_name }}'
+  register: jenkins_exe
+
+- name: Create jenkins directory structure
+  win_file:
+    path: '{{ jenkins_path }}'
+    state: directory
+
+- name: Copy jenkins files
+  win_copy:
+    src: 'files/jenkins/'
+    dest: '{{ jenkins_path }}'
+  when: not jenkins_exe.stat.exists
+
+- name: Ensure jenkins configuration
+  win_xml:
+    path: '{{ jenkins_path }}/{{ jenkins_configuration_name }}'
+    xpath: /service/arguments
+    fragment: -jar "%BASE%\slave.jar" -jnlpUrl http://20.239.116.249:8080/computer/{{ jenkins_agent_name }}/slave-agent.jnlp -secret {{ jenkins_agent_secret }}
+    type: text
+    backup: true
+    state: present
+
+- name: Check if jenkins service is installed
+  win_service:
+    name: '{{ jenkins_service_name }}'
+  register: jenkins_service
+
+- name: Create jenkins service
+  win_shell: '{{ jenkins_path }}/{{ jenkins_exe_name }} install'
+  args:
+    executable: cmd
+  when: not jenkins_service.exists
+
+- name: Allow user to Log on as a service
+  win_user_right:
+    name: JenkinsService
+    users:
+    - '.\{{ ansible_user }}'
+    action: add
+
+- name: Set the service log on user to a local account
+  win_service:
+    name: '{{ jenkins_service_name }}'
+    state: started
+    start_mode: delayed
+    username: '.\{{ ansible_user }}'
+    password: '{{ ansible_password }}'

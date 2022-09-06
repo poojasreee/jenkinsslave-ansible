@@ -1,0 +1,112 @@
+---
+# tasks file for /etc/ansible/roles/provision
+- name: Create resource group
+  azure_rm_resourcegroup:
+    name: '{{ rg_name }}'
+    location: '{{ location }}'
+    tags:
+      ansible: '{{ tag_name }}'
+
+- name: Create virtual network
+  azure_rm_virtualnetwork:
+    resource_group: '{{ rg_name }}'
+    name: '{{ vnet_name }}'
+    address_prefixes: '10.0.0.0/16'
+    tags:
+      ansible: '{{ tag_name }}'
+
+- name: Add subnet
+  azure_rm_subnet:
+    resource_group: '{{ rg_name }}'
+    name: '{{ vnet_subnet_name }}'
+    address_prefix: '10.0.0.0/24'
+    virtual_network: '{{ vnet_name }}'
+
+- name: Create public IPs for slaves
+  azure_rm_publicipaddress:
+    resource_group: '{{ rg_name }}'
+    location: '{{ location }}'
+    name: '{{ item.name }}-ip'
+    allocation_method: static
+    tags:
+      ansible: slave
+  with_items: '{{ slaves_inventory }}'
+
+- name: Create Network Security Group for slaves
+  azure_rm_securitygroup:
+    resource_group: '{{ rg_name }}'
+    name: '{{ nsg_name }}'
+    rules:
+      - name: 'allow_rdp'
+        protocol: Tcp
+        destination_port_range: 3389
+        access: Allow
+        priority: 1001
+        direction: Inbound
+      - name: 'allow_web_traffic'
+        protocol: Tcp
+        destination_port_range:
+          - 80
+          - 443
+        access: Allow
+        priority: 1002
+        direction: Inbound
+      - name: 'allow_powershell_remoting'
+        protocol: Tcp
+        destination_port_range: 
+          - 5985
+          - 5986
+        access: Allow
+        priority: 1003
+        direction: Inbound
+    tags:
+      ansible: '{{ tag_name }}'
+
+- name: Create Network Interface for slaves
+  azure_rm_networkinterface:
+    name: '{{ item.name }}-nic'
+    location: '{{ location }}'
+    resource_group: '{{ rg_name }}'
+    virtual_network: '{{ vnet_name }}'
+    subnet_name: '{{ vnet_subnet_name }}'
+    security_group: '{{ nsg_name }}'
+    ip_configurations:
+      - name: default
+        public_ip_address_name: '{{ item.name }}-ip'
+        primary: True
+    tags:
+      ansible: '{{ tag_name }}'
+  with_items: '{{ slaves_inventory }}'
+
+- name: Create virtual machine
+  azure_rm_virtualmachine:
+    resource_group: '{{ rg_name }}'
+    location: '{{ location }}'
+    name: '{{ item.name }}'
+    vm_size: '{{ item.size }}'
+    admin_username: '{{ item.vm_user }}'
+    admin_password: '{{ item.vm_password }}'
+    network_interfaces: '{{ item.name }}-nic'
+    os_type: Windows
+    image:
+      offer: WindowsServer
+      publisher: MicrosoftWindowsServer
+      sku: 2022-datacenter-azure-edition-core
+      version: latest
+    managed_disk_type: Premium_LRS
+    tags:
+      ansible: '{{ tag_name }}'
+  with_items: '{{ slaves_inventory }}'
+
+- name: Create Azure vm extension to enable HTTPS WinRM listener
+  azure_rm_virtualmachineextension:
+    name: winrm-extension
+    resource_group: '{{ rg_name }}'
+    location: '{{ location }}'
+    virtual_machine_name: '{{ item.name }}'
+    publisher: Microsoft.Compute
+    virtual_machine_extension_type: CustomScriptExtension
+    type_handler_version: '1.10'
+    settings: '{"commandToExecute": "powershell.exe -ExecutionPolicy ByPass -EncodedCommand {{ winrm_enable_script }}"}'
+    auto_upgrade_minor_version: true
+  with_items: '{{ slaves_inventory }}'

@@ -1,0 +1,30 @@
+---
+- name: Check if java is already installed
+  win_stat:
+    path: '{{ java_installation_path }}'
+  register: java
+
+- name: Create temp directory structure
+  win_file:
+    path: '{{ temp_path }}'
+    state: directory
+  when: not java.stat.exists
+
+- name: Copy java installer
+  win_copy:
+    src: 'files/jdk/{{ java_installer }}'
+    dest: '{{ java_install_path }}'
+  when: not java.stat.exists
+
+- name: Ensure java is installed
+  win_package:
+    path: '{{ java_install_path }}'
+    product_id: '{7383FAC9-7481-5A92-A58B-85830D7B2AD3}'
+    state: present
+  when: not java.stat.exists
+
+- name: Remove a file, if present
+  win_file:
+    path: '{{ java_install_path }}'
+    state: absent
+  when: not java.stat.exists
