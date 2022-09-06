@@ -1,5 +1,0 @@
----
-- name: Install jenkins Windows slaves
-  hosts: slaves
-  roles:
-    - configure

@@ -1,6 +1,0 @@
----
-- name: Provision Jenkins Windows slaves on Azure
-  hosts: localhost
-  connection: local
-  roles:
-    - provision

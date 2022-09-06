@@ -1,3 +1,0 @@
----
-- name: Provision Jenkins Windows slaves
-  import_playbook: provision.yml
