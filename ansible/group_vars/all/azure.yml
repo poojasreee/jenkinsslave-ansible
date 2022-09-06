@@ -1,0 +1,8 @@
+---
+slaves_inventory:
+  - {
+      name: jk-slave,
+      size: Standard_D4s_v3,
+      vm_user: 'admin123',
+      vm_password: 'Pooja@12345'
+    }
