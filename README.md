@@ -1,0 +1,1 @@
+# jenkinsslave-ansible
