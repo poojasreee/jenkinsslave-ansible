@@ -1,0 +1,3 @@
+---
+- name: Configure Jenkins Windows slaves
+  import_playbook: configure.yml
