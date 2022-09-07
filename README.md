@@ -1,5 +1,8 @@
 # jenkinsslave-ansible![ansi](https://user-images.githubusercontent.com/107124664/188657563-b1f1335a-506c-41d6-ac5e-c04828b9b5de.PNG)
 
+
+![jenkins](https://user-images.githubusercontent.com/107124664/188887474-77938bf4-d455-4a64-b628-7510f7cc537d.png)
+
 Problem statement: Need to deploy windows core machine with jenkins slave running in it.
 
 prerequisites:
