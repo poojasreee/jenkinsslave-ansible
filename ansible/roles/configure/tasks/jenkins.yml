@@ -38,7 +38,7 @@
 
 - name: Allow user to Log on as a service
   win_user_right:
-    name: JenkinsService
+    name: SeServiceLogonRight
     users:
     - '.\{{ ansible_user }}'
     action: add
