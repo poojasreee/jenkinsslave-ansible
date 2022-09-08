@@ -8,6 +8,8 @@ Problem statement: Need to deploy windows core machine with jenkins slave runnin
 prerequisites:
 1. A running jenkins master server in the same server the ansible controller - Installed & configured by creating azure credentials file. 
 pip install "pywinrm>=0.3.0"
+2.Install Azure dependencies package
+pip install ansible[azure]
 3. Azure service principal: Create a service principal, making note of the following values: appId, displayName, password, and tenant (azurecli)
 
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
